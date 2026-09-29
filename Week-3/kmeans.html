@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Experiment - 3</title>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f6f8;
+            color: #222;
+            margin: 0;
+            padding: 40px;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: auto;
+            background-color: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            text-align: center;
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+
+        h2 {
+            color: #34495e;
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 3px;
+            margin-top: 15px;
+            margin-bottom: 5px;
+        }
+
+        p {
+            font-size: 16px;
+            line-height: 1.6;
+        }
+
+        .dataset {
+            text-align: left;
+            margin: 20px 0;
+        }
+
+        pre {
+            background-color: white;
+            color: black;
+            padding: 20px;
+            border-radius: 8px;
+            overflow-x: auto;
+            line-height: 1.5;
+            font-size: 14px;
+            margin-top: 0;
+            
+        }
+
+        .output {
+            background-color: white;
+            color: black;
+            padding: 20px;
+            font-family: Consolas, monospace;
+            font-size: 15px;
+            line-height: 1.8;
+            overflow-x: auto;
+        }
+
+        .output-section {
+            margin-bottom: 25px;
+        }
+
+
+        footer {
+            text-align: center;
+            margin-top: 30px;
+            color: #777;
+            font-size: 14px;
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="container">
+
+    <h1>Experiment - 3</h1>
+
+    <div class="aim-description">
+
+        <p>
+            <strong>AIM:</strong>
+            To implement and demonstrate the K-Means clustering algorithm
+            for grouping data samples into clusters based on their similarity.
+        </p>
+
+        <p>
+            <strong>Description:</strong>
+            K-Means is an unsupervised machine learning algorithm used for
+            clustering data into K distinct groups. It starts by selecting K
+            initial centroids and assigns each data point to the nearest
+            centroid based on Euclidean distance. The centroids are then
+            recalculated as the mean of the data points belonging to each
+            cluster. This process is repeated until the centroids become
+            stable or the maximum number of iterations is reached. In this
+            implementation, the Iris dataset is divided into 60% training
+            data and 40% testing data. The training data is used to calculate
+            the final centroids, and the testing data is assigned to the
+            nearest cluster.
+        </p>
+
+    </div>
+
+    <h2>Dataset</h2>
+
+    <div class="dataset">
+        <img src="Iris_Dataset.png"
+             alt="Iris Dataset"
+             style="width: 400px; height: 200px;">
+    </div>
+
+    <h2>Python Code</h2>
+
+    <pre><code>
+import pandas as pd
+import random
+data = pd.read_csv("iris.csv", header=None)
+data = data.values.tolist()
+random.shuffle(data)
+X = [row[0:4] for row in data]
+train_size = int(0.6 * len(X))
+X_train = X[:train_size]
+X_test = X[train_size:]
+print("Training data:", len(X_train))
+print("Testing data:", len(X_test))
+def euclidean_distance(point1, point2):
+    distance = 0
+    for i in range(len(point1)):
+        distance = distance + (float(point1[i]) - float(point2[i])) ** 2
+    return distance ** 0.5
+def calculate_centroid(cluster):
+    centroid = []
+    for j in range(len(cluster[0])):
+        total = 0
+        for i in range(len(cluster)):
+            total = total + float(cluster[i][j])
+        centroid.append(total / len(cluster))
+    return centroid
+def kmeans(X, k):
+    centroids = random.sample(X, k)
+    for iteration in range(100):
+        clusters = [[] for i in range(k)]
+        for point in X:
+            distances = []
+            for centroid in centroids:
+                distance = euclidean_distance(point, centroid)
+                distances.append(distance)
+            nearest = distances.index(min(distances))
+            clusters[nearest].append(point)
+        new_centroids = []
+        for cluster in clusters:
+            if len(cluster) > 0:
+                new_centroids.append(calculate_centroid(cluster))
+            else:
+                new_centroids.append(random.choice(X))
+        if new_centroids == centroids:
+            break
+        centroids = new_centroids
+    return centroids
+def predict_clusters(X, centroids):
+    predictions = []
+    for point in X:
+        distances = []
+        for centroid in centroids:
+            distance = euclidean_distance(point, centroid)
+            distances.append(distance)
+        cluster = distances.index(min(distances))
+        predictions.append(cluster)
+    return predictions
+k = 3
+centroids = kmeans(X_train, k)
+print("\nFinal Centroids:")
+for i in range(len(centroids)):
+    print("Cluster", i + 1, ":", centroids[i])
+train_clusters = predict_clusters(X_train, centroids)
+test_clusters = predict_clusters(X_test, centroids)
+print("\nTraining Cluster Assignments:")
+print(train_clusters)
+print("\nTesting Cluster Assignments:")
+print(test_clusters)
+print("\nNumber of Testing Data Points in Each Cluster:")
+for i in range(k):
+    count = test_clusters.count(i)
+    print("Cluster", i + 1, ":", count)
+    </code></pre>
+
+    <h2>Output</h2>
+
+    <div class="output">
+
+        <div class="output-section">
+            <strong>Training data:</strong> 90<br>
+            <strong>Testing data:</strong> 60
+        </div>
+
+        <div class="output-section">
+            <strong>Final Centroids:</strong>
+
+            <div class="centroid">
+                Cluster 1 : [5.046666666666666, 3.4866666666666672, 1.47, 0.25333333333333335]
+            </div>
+
+            <div class="centroid">
+                Cluster 2 : [5.902564102564101, 2.743589743589744, 4.394871794871794, 1.4538461538461536]
+            </div>
+
+            <div class="centroid">
+                Cluster 3 : [6.847619047619048, 3.1238095238095243, 5.723809523809523, 2.1380952380952376]
+            </div>
+        </div>
+
+        <div class="output-section">
+            <strong>Training Cluster Assignments:</strong>
+
+            <div class="cluster-list">
+                [1, 1, 1, 0, 1, 0, 1, 2, 0, 0, 2, 0, 0, 1, 0, 2, 2, 1, 2, 0,
+                0, 1, 0, 0, 1, 1, 1, 2, 0, 2, 0, 0, 1, 2, 2, 1, 2, 1, 1, 1,
+                1, 0, 0, 2, 1, 0, 2, 1, 1, 2, 2, 2, 1, 1, 2, 0, 2, 1, 1, 0,
+                0, 0, 0, 1, 0, 0, 1, 1, 0, 1, 1, 0, 0, 1, 1, 1, 1, 1, 0, 1,
+                0, 1, 0, 2, 1, 1, 1, 2, 2, 2]
+            </div>
+        </div>
+
+        <div class="output-section">
+            <strong>Testing Cluster Assignments:</strong>
+
+            <div class="cluster-list">
+                [0, 1, 0, 2, 1, 1, 2, 1, 1, 2, 2, 0, 0, 1, 0, 0, 1, 1, 2, 1,
+                0, 1, 1, 2, 0, 1, 1, 1, 1, 1, 2, 1, 2, 1, 2, 2, 1, 0, 0, 0,
+                2, 0, 1, 2, 1, 0, 0, 2, 0, 2, 1, 0, 2, 0, 2, 0, 0, 0, 1, 2]
+            </div>
+        </div>
+
+        <div class="output-section">
+            <strong>Number of Testing Data Points in Each Cluster:</strong>
+
+            <div class="cluster-count">
+                Cluster 1 : 20<br>
+                Cluster 2 : 23<br>
+                Cluster 3 : 17
+            </div>
+        </div>
+
+    </div>
+
+</div>
+
+</body>
+</html>

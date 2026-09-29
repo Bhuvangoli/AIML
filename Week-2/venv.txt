@@ -1,0 +1,5 @@
+venv activation command
+
+.venv/Scripts/activate 
+
+run the above command in AIML Lab Directory
