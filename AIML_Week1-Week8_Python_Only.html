@@ -1,0 +1,1137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AIML Python Programs - Week 1 to Week 8</title>
+<style>
+body {
+    background: white;
+    color: black;
+    font-family: Arial, sans-serif;
+    margin: 40px;
+}
+h1 {
+    text-align: center;
+    margin-bottom: 40px;
+}
+h2 {
+    margin-top: 45px;
+    border-bottom: 2px solid black;
+    padding-bottom: 8px;
+}
+h3 {
+    margin-top: 28px;
+    margin-bottom: 10px;
+}
+pre {
+    background: white;
+    color: black;
+    border: 1px solid #999;
+    padding: 15px;
+    white-space: pre-wrap;
+    overflow-x: auto;
+    font-family: Consolas, "Courier New", monospace;
+    font-size: 14px;
+    line-height: 1.5;
+}
+</style>
+</head>
+<body>
+<h1>AIML Python Programs</h1>
+<h2>Week-1</h2>
+<h3>Finds</h3>
+<pre>import pandas as pd
+
+data = pd.read_csv(&quot;data.csv&quot;)
+
+attributes = data.iloc[:, :-1].values
+target = data.iloc[:, -1].values
+
+hypothesis = []
+
+for i in range(len(attributes[0])):
+    hypothesis.append(&quot;0&quot;)
+
+for i in range(len(attributes)):
+    if target[i] == &quot;Yes&quot; or target[i] == 1:
+        for j in range(len(attributes[i])):
+            if hypothesis[j] == &quot;0&quot;:
+                hypothesis[j] = attributes[i][j]
+            elif hypothesis[j] != attributes[i][j]:
+                hypothesis[j] = &quot;?&quot;
+
+print(&quot;Final Hypothesis:&quot;)
+print(hypothesis)</pre>
+<h2>Week-2</h2>
+<h3>Knn</h3>
+<pre>import pandas as pd
+import random
+
+data = pd.read_csv(&quot;iris.csv&quot;, header=None)
+
+data = data.values.tolist()
+
+random.shuffle(data)
+
+X = [row[0:4] for row in data]
+y = [row[4] for row in data]
+
+train_size = int(0.6 * len(X))
+
+X_train = X[:train_size]
+y_train = y[:train_size]
+
+X_test = X[train_size:]
+y_test = y[train_size:]
+
+print(&quot;Training data:&quot;, len(X_train))
+print(&quot;Testing data:&quot;, len(X_test))
+
+def euclidean_distance(point1, point2):
+    distance = 0
+
+    for i in range(len(point1)):
+        distance = distance + (float(point1[i]) - float(point2[i])) ** 2
+
+    return distance ** 0.5
+
+def knn_predict(X_train, y_train, test_point, k):
+    distances = []
+
+    for i in range(len(X_train)):
+        distance = euclidean_distance(test_point, X_train[i])
+        distances.append((distance, y_train[i]))
+
+    distances.sort(key=lambda x: x[0])
+
+    neighbors = distances[:k]
+
+    class_count = {}
+
+    for distance, label in neighbors:
+        if label in class_count:
+            class_count[label] += 1
+        else:
+            class_count[label] = 1
+
+    predicted_class = None
+    highest_count = 0
+
+    for label in class_count:
+        if class_count[label] &gt; highest_count:
+            highest_count = class_count[label]
+            predicted_class = label
+
+    return predicted_class
+
+k = 5
+
+predictions = []
+
+for test_point in X_test:
+    prediction = knn_predict(X_train, y_train, test_point, k)
+    predictions.append(prediction)
+
+correct = 0
+
+for i in range(len(y_test)):
+    if predictions[i] == y_test[i]:
+        correct += 1
+
+accuracy = (correct / len(y_test)) * 100
+
+print(&quot;Correct Predictions:&quot;, correct)
+print(&quot;Total Test Data:&quot;, len(y_test))
+print(&quot;Accuracy:&quot;, accuracy, &quot;%&quot;)</pre>
+<h2>Week-3</h2>
+<h3>Kmeans</h3>
+<pre>import pandas as pd
+import random
+
+data = pd.read_csv(&quot;iris.csv&quot;, header=None)
+
+data = data.values.tolist()
+
+random.shuffle(data)
+
+X = [row[0:4] for row in data]
+
+train_size = int(0.6 * len(X))
+
+X_train = X[:train_size]
+X_test = X[train_size:]
+
+print(&quot;Training data:&quot;, len(X_train))
+print(&quot;Testing data:&quot;, len(X_test))
+
+def euclidean_distance(point1, point2):
+    distance = 0
+
+    for i in range(len(point1)):
+        distance = distance + (float(point1[i]) - float(point2[i])) ** 2
+
+    return distance ** 0.5
+
+def calculate_centroid(cluster):
+    centroid = []
+
+    for j in range(len(cluster[0])):
+        total = 0
+
+        for i in range(len(cluster)):
+            total = total + float(cluster[i][j])
+
+        centroid.append(total / len(cluster))
+
+    return centroid
+
+def kmeans(X, k):
+    centroids = random.sample(X, k)
+
+    for iteration in range(100):
+
+        clusters = [[] for i in range(k)]
+
+        for point in X:
+            distances = []
+
+            for centroid in centroids:
+                distance = euclidean_distance(point, centroid)
+                distances.append(distance)
+
+            nearest = distances.index(min(distances))
+
+            clusters[nearest].append(point)
+
+        new_centroids = []
+
+        for cluster in clusters:
+            if len(cluster) &gt; 0:
+                new_centroids.append(calculate_centroid(cluster))
+            else:
+                new_centroids.append(random.choice(X))
+
+        if new_centroids == centroids:
+            break
+
+        centroids = new_centroids
+
+    return centroids
+
+def predict_clusters(X, centroids):
+    predictions = []
+
+    for point in X:
+        distances = []
+
+        for centroid in centroids:
+            distance = euclidean_distance(point, centroid)
+            distances.append(distance)
+
+        cluster = distances.index(min(distances))
+        predictions.append(cluster)
+
+    return predictions
+
+k = 3
+
+centroids = kmeans(X_train, k)
+
+print(&quot;\nFinal Centroids:&quot;)
+
+for i in range(len(centroids)):
+    print(&quot;Cluster&quot;, i + 1, &quot;:&quot;, centroids[i])
+
+train_clusters = predict_clusters(X_train, centroids)
+
+test_clusters = predict_clusters(X_test, centroids)
+
+print(&quot;\nTraining Cluster Assignments:&quot;)
+print(train_clusters)
+
+print(&quot;\nTesting Cluster Assignments:&quot;)
+print(test_clusters)
+
+print(&quot;\nNumber of Testing Data Points in Each Cluster:&quot;)
+
+for i in range(k):
+    count = test_clusters.count(i)
+    print(&quot;Cluster&quot;, i + 1, &quot;:&quot;, count)</pre>
+<h2>Week-4</h2>
+<h3>Lwr</h3>
+<pre>import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+from sklearn.model_selection import train_test_split
+
+df = pd.read_csv(&quot;tips.csv&quot;)
+
+x = df[&quot;total_bill&quot;].values
+y = df[&quot;tip&quot;].values
+
+x_train, x_test, y_train, y_test = train_test_split(
+    x, y, test_size=0.2, random_state=42
+)
+
+tau = 5.0
+
+x_train = np.column_stack([np.ones(len(x_train)), x_train])
+
+predictions = []
+
+for bill in x_test:
+    weights = np.exp(-((x_train[:, 1] - bill) ** 2) / (2 * tau ** 2))
+    W = np.diag(weights)
+    xTW = np.dot(x_train.T, W)
+    A = np.dot(xTW, x_train)
+    b = np.dot(xTW, y_train)
+    theta = np.dot(np.linalg.inv(A), b)
+    prediction = theta[0] + theta[1] * bill
+    predictions.append(prediction)
+
+predictions = np.array(predictions)
+
+sorted_indices = np.argsort(x_test)
+x_test_sorted = x_test[sorted_indices]
+predictions_sorted = predictions[sorted_indices]
+
+plt.scatter(x_train[:, 1], y_train, color=&quot;lightblue&quot;, label=&quot;Training Data&quot;, marker=&quot;o&quot;)
+plt.scatter(x_test, y_test, color=&quot;darkblue&quot;, label=&quot;Test Data&quot;, marker=&quot;o&quot;)
+plt.plot(x_test_sorted, predictions_sorted, color=&quot;red&quot;, label=&quot;Prediction Line&quot;, linewidth=2)
+
+plt.xlabel(&quot;Total Bill&quot;)
+plt.ylabel(&quot;Tip&quot;)
+plt.title(&quot;Locally Weighted Regression&quot;)
+plt.legend()
+plt.show()</pre>
+<h2>Week-5</h2>
+<h3>Enjoysport</h3>
+<pre>import pandas as pd
+import numpy as np
+
+def calculate_entropy(target_col):
+    elements, counts = np.unique(target_col, return_counts=True)
+    probabilities = counts / counts.sum()
+    entropy = -np.sum(probabilities * np.log2(probabilities))
+    return entropy
+
+def calculate_information_gain(data, split_attribute_name, target_name):
+    total_entropy = calculate_entropy(data[target_name])
+    vals, counts = np.unique(data[split_attribute_name], return_counts=True)
+    weighted_entropy = 0
+    for i in range(len(vals)):
+        subset = data[data[split_attribute_name] == vals[i]]
+        subset_entropy = calculate_entropy(subset[target_name])
+        weighted_entropy += (counts[i] / np.sum(counts)) * subset_entropy
+    information_gain = total_entropy - weighted_entropy
+    return information_gain
+
+def build_decision_tree(data, original_data, features,
+                        target_attribute_name, parent_node_class=None):
+    if len(np.unique(data[target_attribute_name])) &lt;= 1:
+        return np.unique(data[target_attribute_name])[0]
+    elif len(data) == 0:
+        return np.unique(original_data[target_attribute_name])[
+            np.argmax(np.unique(original_data[target_attribute_name],
+                                return_counts=True)[1])]
+    elif len(features) == 0:
+        return parent_node_class
+    else:
+        np.unique(original_data[target_attribute_name])[
+            np.argmax(np.unique(original_data[target_attribute_name],
+                                return_counts=True)[1])]
+        item_values = [
+            calculate_information_gain(data, feature, target_attribute_name)
+            for feature in features
+        ]
+        best_feature_index = np.argmax(item_values)
+
+        best_feature = features[best_feature_index]
+        tree = {best_feature: {}}
+        features = [i for i in features if i != best_feature]
+
+        for value in np.unique(data[best_feature]):
+            subset_data = data.where(data[best_feature] == value).dropna()
+            subtree = build_decision_tree(
+                subset_data,
+                original_data,
+                features,
+                target_attribute_name,
+                parent_node_class
+            )
+            tree[best_feature][value] = subtree
+
+        return tree
+
+def print_tree(tree, indent=0):
+    for key, value in tree.items():
+        print(&#x27; &#x27; * indent + str(key))
+        if isinstance(value, dict):
+            print_tree(value, indent + 1)
+        else:
+            print(&#x27; &#x27; * (indent + 1) + &#x27;Prediction: &#x27; + str(value))
+
+file_path = &quot;/content/Day Ski AirTemp Humidity Wind Nate...&quot;
+df = pd.read_csv(&quot;enjoysport.csv&quot;)
+features = df.columns[:-1].tolist()
+target_col = df.columns[-1]
+decision_tree = build_decision_tree(df, df, features, target_col)
+print_tree(decision_tree)
+</pre>
+<h3>Salaries</h3>
+<pre>import pandas as pd
+import numpy as np
+
+def calculate_entropy(target_col):
+    elements, counts = np.unique(target_col, return_counts=True)
+    probabilities = counts / np.sum(counts)
+    entropy = -np.sum(probabilities * np.log2(probabilities))
+    return entropy
+
+
+def calculate_information_gain(data, split_attribute_name, target_name):
+    total_entropy = calculate_entropy(data[target_name])
+    vals, counts = np.unique(data[split_attribute_name], return_counts=True)
+    weighted_entropy = 0
+    for i in range(len(vals)):
+        subset = data.where(data[split_attribute_name] == vals[i]).dropna()
+        subset_entropy = calculate_entropy(subset[target_name])
+        weighted_entropy += (counts[i] / np.sum(counts)) * subset_entropy
+    information_gain = total_entropy - weighted_entropy
+    return information_gain
+
+
+def build_decision_tree(data, original_data, features,
+                        target_attribute_name, parent_node_class=None):
+    if len(np.unique(data[target_attribute_name])) &lt;= 1:
+        return np.unique(data[target_attribute_name])[0]
+    elif len(data) == 0:
+        return np.unique(original_data[target_attribute_name])[np.argmax(np.unique(original_data[target_attribute_name], return_counts=True)[1])]
+    elif len(features) == 0:
+        return parent_node_class
+    else:
+        np.unique(original_data[target_attribute_name])[np.argmax(np.unique(data[target_attribute_name], return_counts=True)[1])]
+        parent_node_class = np.unique(data[target_attribute_name], return_counts=True)[1]
+
+        item_values = [calculate_information_gain(data, feature,
+                                                   target_attribute_name) for feature in features]
+        best_feature_index = np.argmax(item_values)
+        best_feature = features[best_feature_index]
+
+        tree = {best_feature: {}}
+        features = [i for i in features if i != best_feature]
+        for value in np.unique(data[best_feature]):
+            sub_data = data.where(data[best_feature] == value).dropna()
+            subtree = build_decision_tree(sub_data, original_data,
+                                          features, target_attribute_name,
+                                          parent_node_class)
+            tree[best_feature][value] = subtree
+
+        return tree
+
+
+def print_tree(tree, indent=0):
+    for key, value in tree.items():
+        print(&#x27; &#x27; * indent + str(key))
+        if isinstance(value, dict):
+            print_tree(value, indent + 1)
+        else:
+            print(&#x27; &#x27; * (indent + 1) + &#x27;Prediction: &#x27; + str(value))
+
+df = pd.read_csv(&quot;salaries.csv&quot;)
+features = df.columns[:-1].tolist()
+target_col = df.columns[-1]
+decision_tree = build_decision_tree(df, df, features, target_col)
+print_tree(decision_tree)
+</pre>
+<h3>Titanic</h3>
+<pre>import pandas as pd
+import numpy as np
+
+def calculate_entropy(target_col):
+    elements, counts = np.unique(target_col, return_counts=True)
+    probabilities = counts / np.sum(counts)
+    entropy = -np.sum(probabilities * np.log2(probabilities))
+    return entropy
+
+def calculate_information_gain(data, split_attribute_name, target_name):
+    total_entropy = calculate_entropy(data[target_name])
+
+    vals, counts = np.unique(data[split_attribute_name], return_counts=True)
+
+    weighted_entropy = 0
+
+    for i in range(len(vals)):
+        subset = data[data[split_attribute_name] == vals[i]]
+        subset_entropy = calculate_entropy(subset[target_name])
+        weighted_entropy += (counts[i] / np.sum(counts)) * subset_entropy
+
+    information_gain = total_entropy - weighted_entropy
+
+    return information_gain
+
+def build_decision_tree(data, original_data, features,
+                        target_attribute_name, parent_node_class=None):
+
+    if len(np.unique(data[target_attribute_name])) &lt;= 1:
+        return np.unique(data[target_attribute_name])[0]
+
+    elif len(data) == 0:
+        return np.unique(original_data[target_attribute_name])[
+            np.argmax(
+                np.unique(
+                    original_data[target_attribute_name],
+                    return_counts=True
+                )[1]
+            )
+        ]
+
+    elif len(features) == 0:
+        return parent_node_class
+
+    else:
+        parent_node_class = np.unique(data[target_attribute_name])[
+            np.argmax(
+                np.unique(
+                    data[target_attribute_name],
+                    return_counts=True
+                )[1]
+            )
+        ]
+
+        item_values = [
+            calculate_information_gain(
+                data,
+                feature,
+                target_attribute_name
+            )
+            for feature in features
+        ]
+
+        best_feature_index = np.argmax(item_values)
+        best_feature = features[best_feature_index]
+
+        tree = {best_feature: {}}
+
+        features = [
+            i for i in features
+            if i != best_feature
+        ]
+
+        for value in np.unique(data[best_feature]):
+            sub_data = data[
+                data[best_feature] == value
+            ]
+
+            subtree = build_decision_tree(
+                sub_data,
+                original_data,
+                features,
+                target_attribute_name,
+                parent_node_class
+            )
+
+            tree[best_feature][value] = subtree
+
+        return tree
+
+def print_tree(tree, indent=0):
+    for key, value in tree.items():
+        print(&quot; &quot; * indent + str(key))
+
+        if isinstance(value, dict):
+            print_tree(value, indent + 1)
+        else:
+            print(
+                &quot; &quot; * (indent + 1) +
+                &quot;Prediction: &quot; +
+                str(value)
+            )
+
+df = pd.read_csv(&quot;titanic.csv&quot;)
+
+df = df[
+    [&quot;Survived&quot;, &quot;Pclass&quot;, &quot;Sex&quot;, &quot;SibSp&quot;, &quot;Parch&quot;, &quot;Embarked&quot;]
+]
+
+df = df.dropna()
+
+df[&quot;Pclass&quot;] = df[&quot;Pclass&quot;].astype(str)
+df[&quot;SibSp&quot;] = df[&quot;SibSp&quot;].astype(str)
+df[&quot;Parch&quot;] = df[&quot;Parch&quot;].astype(str)
+
+features = [
+    &quot;Pclass&quot;,
+    &quot;Sex&quot;,
+    &quot;SibSp&quot;,
+    &quot;Parch&quot;,
+    &quot;Embarked&quot;
+]
+
+target_col = &quot;Survived&quot;
+
+decision_tree = build_decision_tree(
+    df,
+    df,
+    features,
+    target_col
+)
+
+print_tree(decision_tree)</pre>
+<h3>Decision Tree</h3>
+<pre>import pandas as pd
+import matplotlib.pyplot as plt
+from sklearn.model_selection import train_test_split
+from sklearn.tree import DecisionTreeClassifier, plot_tree
+from sklearn.metrics import accuracy_score
+
+data = pd.read_csv(&quot;titanic.csv&quot;)
+
+X = data.drop(&quot;Survived&quot;, axis=1)
+y = data[&quot;Survived&quot;]
+
+X = X.drop([&quot;PassengerId&quot;, &quot;Name&quot;, &quot;Ticket&quot;, &quot;Cabin&quot;], axis=1)
+
+X[&quot;Age&quot;] = X[&quot;Age&quot;].fillna(X[&quot;Age&quot;].median())
+X[&quot;Embarked&quot;] = X[&quot;Embarked&quot;].fillna(X[&quot;Embarked&quot;].mode()[0])
+
+X = pd.get_dummies(X, columns=[&quot;Sex&quot;, &quot;Embarked&quot;], dtype=int)
+
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y, test_size=0.2, random_state=42
+)
+
+model = DecisionTreeClassifier(
+    criterion=&quot;entropy&quot;,
+    random_state=42
+)
+
+model.fit(X_train, y_train)
+
+y_pred = model.predict(X_test)
+
+print(&quot;Predictions:&quot;, y_pred)
+print(&quot;Actual:&quot;, y_test.values)
+print(&quot;Accuracy:&quot;, accuracy_score(y_test, y_pred))
+
+plt.figure(figsize=(15, 10))
+
+plot_tree(
+    model,
+    feature_names=X.columns,
+    class_names=[&quot;Not Survived&quot;, &quot;Survived&quot;],
+    filled=True
+)
+
+plt.show()</pre>
+<h3>Enjoy Sport Dt</h3>
+<pre>import pandas as pd
+import matplotlib.pyplot as plt
+from sklearn.tree import DecisionTreeClassifier, plot_tree
+from sklearn.preprocessing import LabelEncoder
+
+data = pd.read_csv(&quot;enjoysport.csv&quot;)
+
+X = data.iloc[:, 1:-1]
+y = data.iloc[:, -1]
+
+encoders = {}
+
+for column in X.columns:
+    encoder = LabelEncoder()
+    X[column] = encoder.fit_transform(X[column])
+    encoders[column] = encoder
+
+target_encoder = LabelEncoder()
+y = target_encoder.fit_transform(y)
+
+model = DecisionTreeClassifier(criterion=&quot;entropy&quot;, random_state=42)
+
+model.fit(X, y)
+
+print(&quot;Accuracy:&quot;, model.score(X, y))
+
+plt.figure(figsize=(12, 8))
+
+plot_tree(
+    model,
+    feature_names=X.columns,
+    class_names=target_encoder.classes_,
+    filled=True
+)
+
+plt.show()</pre>
+<h3>Salaries Dt</h3>
+<pre>import pandas as pd
+import matplotlib.pyplot as plt
+from sklearn.tree import DecisionTreeClassifier, plot_tree
+from sklearn.preprocessing import LabelEncoder
+
+data = pd.read_csv(&quot;salaries.csv&quot;)
+
+X = data.iloc[:, :-1]
+y = data.iloc[:, -1]
+
+encoders = {}
+
+for column in X.columns:
+    encoder = LabelEncoder()
+    X[column] = encoder.fit_transform(X[column])
+    encoders[column] = encoder
+
+model = DecisionTreeClassifier(criterion=&quot;entropy&quot;, random_state=42)
+
+model.fit(X, y)
+
+print(&quot;Accuracy:&quot;, model.score(X, y))
+
+plt.figure(figsize=(15, 10))
+
+plot_tree(
+    model,
+    feature_names=X.columns,
+    class_names=[&quot;0&quot;, &quot;1&quot;],
+    filled=True
+)
+
+plt.show()</pre>
+<h3>Titanic Dt</h3>
+<pre>import pandas as pd
+import matplotlib.pyplot as plt
+from sklearn.tree import DecisionTreeClassifier, plot_tree
+
+data = pd.read_csv(&quot;titanic.csv&quot;)
+
+data = data.dropna()
+
+data = data.drop(
+    columns=[&quot;PassengerId&quot;, &quot;Name&quot;, &quot;Ticket&quot;, &quot;Cabin&quot;],
+    errors=&quot;ignore&quot;
+)
+
+X = data.drop(&quot;Survived&quot;, axis=1)
+y = data[&quot;Survived&quot;]
+
+X = pd.get_dummies(X, dtype=int)
+
+model = DecisionTreeClassifier(
+    criterion=&quot;entropy&quot;,
+    random_state=42
+)
+
+model.fit(X, y)
+
+print(&quot;Accuracy:&quot;, model.score(X, y))
+
+plt.figure(figsize=(20, 12))
+
+plot_tree(
+    model,
+    feature_names=X.columns,
+    class_names=[&quot;Not Survived&quot;, &quot;Survived&quot;],
+    filled=True
+)
+
+plt.show()</pre>
+<h2>Week-6</h2>
+<h3>Andgate</h3>
+<pre>import pandas as pd
+inputs = [
+    (1, 1, 1),
+    (1, 0, 0),
+    (0, 1, 0),
+    (0, 0, 0)
+]
+w1 = float(input(&quot;Enter Weight 1: &quot;))
+w2 = float(input(&quot;Enter Weight 2: &quot;))
+b = -1.5
+L = 0.1
+results = []
+for x1, x2, gt in inputs:
+    z = (x1 * w1) + (x2 * w2) + b
+    if z &gt;= 0:
+        py = 1
+    else:
+        py = 0
+    E = gt - py
+
+    dw1 = L * E * x1
+    dw2 = L * E * x2
+    results.append([
+        x1, x2, w1, w2, b, z, gt, py, E, L, dw1, dw2
+    ])
+columns = [
+    &quot;X1&quot;, &quot;X2&quot;, &quot;W1&quot;, &quot;W2&quot;, &quot;Bias&quot;,
+    &quot;Z&quot;, &quot;GT&quot;, &quot;PY&quot;, &quot;E&quot;, &quot;L&quot;,
+    &quot;ΔW1&quot;, &quot;ΔW2&quot;
+]
+df = pd.DataFrame(results, columns=columns)
+print(&quot;\nAND GATE ANN&quot;)
+print(&quot;=&quot; * 100)
+print(df.to_string(index=False))
+print(&quot;=&quot; * 100)</pre>
+<h3>Orgate</h3>
+<pre>import pandas as pd
+data = [
+    [1, 1, 1],
+    [1, 0, 1],
+    [0, 1, 1],
+    [0, 0, 0]
+]
+w1 = float(input(&quot;Enter Weight 1: &quot;))
+w2 = float(input(&quot;Enter Weight 2: &quot;))
+b = -0.5
+learning_rate = 0.1
+rows = []
+for x1, x2, gt in data:
+    z = (x1 * w1) + (x2 * w2) + b
+    py = 1 if z &gt;= 0 else 0
+    error = gt - py
+    dw1 = learning_rate * error * x1
+    dw2 = learning_rate * error * x2
+    dw = abs(dw1) + abs(dw2)
+    rows.append([
+        x1, x2, gt, py, error,
+        learning_rate, dw, w1, w2
+    ])
+table = pd.DataFrame(
+    rows,
+    columns=[&quot;X1&quot;, &quot;X2&quot;, &quot;GT&quot;, &quot;PY&quot;, &quot;E&quot;, &quot;L&quot;, &quot;ΔW&quot;, &quot;W1&quot;, &quot;W2&quot;]
+)
+print(&quot;\nOR GATE - ANN&quot;)
+print(&quot;=&quot; * 70)
+print(table.to_string(index=False))
+print(&quot;=&quot; * 70)</pre>
+<h3>Mlp</h3>
+<pre>import torch
+x = torch.tensor([[1.0, 1.0]])
+target = torch.tensor([[0.5]])
+learning_rate = 1.0
+epochs = 5
+w1 = torch.tensor([
+    [0.5, 0.5],
+    [0.5, 0.5]
+], requires_grad=True)
+b1 = torch.tensor([[0.0, 0.0]], requires_grad=True)
+w2 = torch.tensor([
+    [0.5],
+    [0.5]
+], requires_grad=True)
+b2 = torch.tensor([[0.0]], requires_grad=True)
+results = []
+for epoch in range(1, epochs + 1):
+    hidden = torch.sigmoid(x @ w1 + b1)
+    output = torch.sigmoid(hidden @ w2 + b2)
+    loss = 0.5 * (target - output) ** 2
+    loss.backward()
+    with torch.no_grad():
+        w1 -= learning_rate * w1.grad
+        b1 -= learning_rate * b1.grad
+        w2 -= learning_rate * w2.grad
+        b2 -= learning_rate * b2.grad
+    results.append([
+        epoch,
+        output.item(),
+        target.item(),
+        loss.item(),
+        w1[0, 0].item(),
+        w1[0, 1].item(),
+        w1[1, 0].item(),
+        w1[1, 1].item(),
+        w2[0, 0].item(),
+        w2[1, 0].item()
+    ])
+    w1.grad.zero_()
+    b1.grad.zero_()
+    w2.grad.zero_()
+    b2.grad.zero_()
+print(&quot;\nMLP USING BACKPROPAGATION&quot;)
+print(&quot;Architecture: 2-2-1&quot;)
+print(&quot;=&quot; * 125)
+print(
+    f&quot;{&#x27;Epoch&#x27;:^7}&quot;
+    f&quot;{&#x27;Actual Output&#x27;:^16}&quot;
+    f&quot;{&#x27;Target&#x27;:^12}&quot;
+    f&quot;{&#x27;Loss&#x27;:^14}&quot;
+    f&quot;{&#x27;W1(1,1)&#x27;:^12}&quot;
+    f&quot;{&#x27;W1(1,2)&#x27;:^12}&quot;
+    f&quot;{&#x27;W1(2,1)&#x27;:^12}&quot;
+    f&quot;{&#x27;W1(2,2)&#x27;:^12}&quot;
+    f&quot;{&#x27;W2(1)&#x27;:^12}&quot;
+    f&quot;{&#x27;W2(2)&#x27;:^12}&quot;
+)
+print(&quot;-&quot; * 125)
+for row in results:
+    print(
+        f&quot;{row[0]:^7}&quot;
+        f&quot;{row[1]:^16.6f}&quot;
+        f&quot;{row[2]:^12.2f}&quot;
+        f&quot;{row[3]:^14.6f}&quot;
+        f&quot;{row[4]:^12.6f}&quot;
+        f&quot;{row[5]:^12.6f}&quot;
+        f&quot;{row[6]:^12.6f}&quot;
+        f&quot;{row[7]:^12.6f}&quot;
+        f&quot;{row[8]:^12.6f}&quot;
+        f&quot;{row[9]:^12.6f}&quot;
+    )
+print(&quot;=&quot; * 125)</pre>
+<h2>Week-7</h2>
+<h3>Em</h3>
+<pre>import matplotlib.pyplot as plt
+from sklearn import datasets
+from sklearn.cluster import KMeans
+import pandas as pd
+import numpy as np
+from sklearn import preprocessing
+from sklearn.mixture import GaussianMixture
+iris = datasets.load_iris()
+
+X = pd.DataFrame(iris.data)
+X.columns = [&#x27;Sepal_Length&#x27;, &#x27;Sepal_Width&#x27;, &#x27;Petal_Length&#x27;, &#x27;Petal_Width&#x27;]
+
+y = pd.DataFrame(iris.target)
+y.columns = [&#x27;Targets&#x27;]
+
+model = KMeans(n_clusters=3, random_state=42)
+model.fit(X)
+
+plt.figure(figsize=(14, 14))
+
+colormap = np.array([&#x27;red&#x27;, &#x27;lime&#x27;, &#x27;black&#x27;])
+
+plt.subplot(2, 2, 1)
+plt.scatter(
+    X.Petal_Length,
+    X.Petal_Width,
+    c=colormap[y.Targets],
+    s=40
+)
+plt.title(&#x27;Real Clusters&#x27;)
+plt.xlabel(&#x27;Petal Length&#x27;)
+plt.ylabel(&#x27;Petal Width&#x27;)
+
+plt.subplot(2, 2, 2)
+plt.scatter(
+    X.Petal_Length,
+    X.Petal_Width,
+    c=colormap[model.labels_],
+    s=40
+)
+plt.title(&#x27;K-Means Clustering&#x27;)
+plt.xlabel(&#x27;Petal Length&#x27;)
+plt.ylabel(&#x27;Petal Width&#x27;)
+
+scaler = preprocessing.StandardScaler()
+scaler.fit(X)
+
+xsa = scaler.transform(X)
+xs = pd.DataFrame(xsa, columns=X.columns)
+
+
+gmm = GaussianMixture(n_components=3, random_state=42)
+gmm.fit(xs)
+
+gmm_y = gmm.predict(xs)
+
+plt.subplot(2, 2, 3)
+plt.scatter(
+    X.Petal_Length,
+    X.Petal_Width,
+    c=colormap[gmm_y],
+    s=40
+)
+plt.title(&#x27;GMM Clustering&#x27;)
+plt.xlabel(&#x27;Petal Length&#x27;)
+plt.ylabel(&#x27;Petal Width&#x27;)
+
+plt.tight_layout()
+plt.show()
+
+print(&#x27;Observation: The GMM using EM algorithm based clustering matched the true labels more closely than the Kmeans.&#x27;)</pre>
+<h2>Week-8</h2>
+<h3>Bfs</h3>
+<pre>from collections import deque
+
+graph = {
+    &#x27;A&#x27;: [&#x27;B&#x27;, &#x27;C&#x27;],
+    &#x27;B&#x27;: [&#x27;D&#x27;, &#x27;E&#x27;],
+    &#x27;C&#x27;: [&#x27;F&#x27;, &#x27;G&#x27;],
+    &#x27;D&#x27;: [],
+    &#x27;E&#x27;: [],
+    &#x27;F&#x27;: [],
+    &#x27;G&#x27;: []
+}
+
+start = &#x27;A&#x27;
+goal = &#x27;G&#x27;
+
+open_list = deque([start])
+closed_list = []
+parent = {start: None}
+
+while open_list:
+    node = open_list.popleft()
+
+    if node in closed_list:
+        continue
+
+    closed_list.append(node)
+
+    print(&quot;OPEN:&quot;, list(open_list))
+    print(&quot;CLOSED:&quot;, closed_list)
+
+    if node == goal:
+        break
+
+    for neighbour in graph[node]:
+        if neighbour not in closed_list and neighbour not in open_list:
+            parent[neighbour] = node
+            open_list.append(neighbour)
+
+path = []
+
+if goal in closed_list:
+    node = goal
+
+    while node is not None:
+        path.append(node)
+        node = parent[node]
+
+    path.reverse()
+
+print(&quot;\nPath:&quot;, &quot; -&gt; &quot;.join(path))
+print(&quot;Final OPEN:&quot;, list(open_list))
+print(&quot;Final CLOSED:&quot;, closed_list)</pre>
+<h3>Dfs</h3>
+<pre>graph = {
+    &#x27;A&#x27;: [&#x27;B&#x27;, &#x27;C&#x27;],
+    &#x27;B&#x27;: [&#x27;D&#x27;, &#x27;E&#x27;],
+    &#x27;C&#x27;: [&#x27;F&#x27;, &#x27;G&#x27;],
+    &#x27;D&#x27;: [],
+    &#x27;E&#x27;: [],
+    &#x27;F&#x27;: [],
+    &#x27;G&#x27;: []
+}
+
+start = &#x27;A&#x27;
+goal = &#x27;G&#x27;
+
+open_list = [start]
+closed_list = []
+parent = {start: None}
+
+while open_list:
+    node = open_list.pop()
+
+    if node in closed_list:
+        continue
+
+    closed_list.append(node)
+
+    print(&quot;OPEN:&quot;, open_list)
+    print(&quot;CLOSED:&quot;, closed_list)
+
+    if node == goal:
+        break
+
+    for neighbour in reversed(graph[node]):
+        if neighbour not in closed_list and neighbour not in open_list:
+            parent[neighbour] = node
+            open_list.append(neighbour)
+
+path = []
+
+if goal in closed_list:
+    node = goal
+
+    while node is not None:
+        path.append(node)
+        node = parent[node]
+
+    path.reverse()
+
+print(&quot;\nPath:&quot;, &quot; -&gt; &quot;.join(path))
+print(&quot;Final OPEN:&quot;, open_list)
+print(&quot;Final CLOSED:&quot;, closed_list)</pre>
+<h3>Iddfs</h3>
+<pre>graph = {
+    &#x27;A&#x27;: [&#x27;B&#x27;, &#x27;C&#x27;],
+    &#x27;B&#x27;: [&#x27;D&#x27;, &#x27;E&#x27;],
+    &#x27;C&#x27;: [&#x27;F&#x27;, &#x27;G&#x27;],
+    &#x27;D&#x27;: [],
+    &#x27;E&#x27;: [],
+    &#x27;F&#x27;: [],
+    &#x27;G&#x27;: []
+}
+
+start = &#x27;A&#x27;
+goal = &#x27;G&#x27;
+
+
+def depth_limited_search(start, goal, limit):
+
+    open_list = [(start, 0)]
+    closed_list = []
+    parent = {start: None}
+
+    while open_list:
+
+        node, depth = open_list.pop()
+
+        if node in closed_list:
+            continue
+
+        closed_list.append(node)
+
+        print(&quot;OPEN:&quot;, open_list)
+        print(&quot;CLOSED:&quot;, closed_list)
+
+        if node == goal:
+
+            path = []
+            current = node
+
+            while current is not None:
+                path.append(current)
+                current = parent[current]
+
+            path.reverse()
+
+            return path, open_list, closed_list
+
+        if depth &lt; limit:
+
+            for neighbour in reversed(graph[node]):
+
+                if neighbour not in closed_list:
+                    parent[neighbour] = node
+                    open_list.append((neighbour, depth + 1))
+
+    return None, open_list, closed_list
+
+
+depth = 0
+
+while True:
+
+    print(&quot;\n==============================&quot;)
+    print(&quot;DEPTH LIMIT:&quot;, depth)
+    print(&quot;==============================&quot;)
+
+    path, open_list, closed_list = depth_limited_search(
+        start,
+        goal,
+        depth
+    )
+
+    if path is not None:
+        print(&quot;\nGoal Found!&quot;)
+        print(&quot;Path:&quot;, &quot; -&gt; &quot;.join(path))
+        print(&quot;Final OPEN:&quot;, open_list)
+        print(&quot;Final CLOSED:&quot;, closed_list)
+        break
+
+    depth += 1</pre>
+</body>
+</html>

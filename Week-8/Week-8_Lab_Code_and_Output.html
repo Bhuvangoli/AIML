@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BFS, DFS and IDDFS - Code and Output</title>
+<style>
+body {
+    background: white;
+    color: black;
+    font-family: Arial, sans-serif;
+    margin: 30px;
+    line-height: 1.5;
+}
+h1, h2, h3 {
+    color: black;
+}
+pre {
+    background: white;
+    color: black;
+    border: 1px solid black;
+    padding: 15px;
+    white-space: pre-wrap;
+    overflow-x: auto;
+    font-family: Consolas, "Courier New", monospace;
+    font-size: 14px;
+}
+</style>
+</head>
+<body>
+
+<h1>BFS, DFS and IDDFS</h1>
+
+<h2>AIM</h2>
+<p>To implement and analyze BFS, DFS, and IDDFS search algorithms to explore a graph or tree and understand their traversal strategies.</p>
+
+<h2>Description</h2>
+<p>BFS explores nodes level by level using a queue. DFS explores as deeply as possible before backtracking using a stack or recursion. IDDFS combines DFS’s memory efficiency with BFS’s completeness by repeatedly performing depth-limited searches with increasing depth limits.</p>
+
+
+<h2>BFS</h2>
+<h3>Code</h3>
+<pre>from collections import deque
+
+graph = {
+    &#x27;A&#x27;: [&#x27;B&#x27;, &#x27;C&#x27;],
+    &#x27;B&#x27;: [&#x27;D&#x27;, &#x27;E&#x27;],
+    &#x27;C&#x27;: [&#x27;F&#x27;, &#x27;G&#x27;],
+    &#x27;D&#x27;: [],
+    &#x27;E&#x27;: [],
+    &#x27;F&#x27;: [],
+    &#x27;G&#x27;: []
+}
+
+start = &#x27;A&#x27;
+goal = &#x27;G&#x27;
+
+open_list = deque([start])
+closed_list = []
+parent = {start: None}
+
+while open_list:
+    node = open_list.popleft()
+
+    if node in closed_list:
+        continue
+
+    closed_list.append(node)
+
+    print(&quot;OPEN:&quot;, list(open_list))
+    print(&quot;CLOSED:&quot;, closed_list)
+
+    if node == goal:
+        break
+
+    for neighbour in graph[node]:
+        if neighbour not in closed_list and neighbour not in open_list:
+            parent[neighbour] = node
+            open_list.append(neighbour)
+
+path = []
+
+if goal in closed_list:
+    node = goal
+
+    while node is not None:
+        path.append(node)
+        node = parent[node]
+
+    path.reverse()
+
+print(&quot;\nPath:&quot;, &quot; -&gt; &quot;.join(path))
+print(&quot;Final OPEN:&quot;, list(open_list))
+print(&quot;Final CLOSED:&quot;, closed_list)</pre>
+<h3>Output</h3>
+<pre>OPEN: []
+CLOSED: [&#x27;A&#x27;]
+OPEN: [&#x27;C&#x27;]
+CLOSED: [&#x27;A&#x27;, &#x27;B&#x27;]
+OPEN: [&#x27;D&#x27;, &#x27;E&#x27;]
+CLOSED: [&#x27;A&#x27;, &#x27;B&#x27;, &#x27;C&#x27;]
+OPEN: [&#x27;E&#x27;, &#x27;F&#x27;, &#x27;G&#x27;]
+CLOSED: [&#x27;A&#x27;, &#x27;B&#x27;, &#x27;C&#x27;, &#x27;D&#x27;]
+OPEN: [&#x27;F&#x27;, &#x27;G&#x27;]
+CLOSED: [&#x27;A&#x27;, &#x27;B&#x27;, &#x27;C&#x27;, &#x27;D&#x27;, &#x27;E&#x27;]
+OPEN: [&#x27;G&#x27;]
+CLOSED: [&#x27;A&#x27;, &#x27;B&#x27;, &#x27;C&#x27;, &#x27;D&#x27;, &#x27;E&#x27;, &#x27;F&#x27;]
+OPEN: []
+CLOSED: [&#x27;A&#x27;, &#x27;B&#x27;, &#x27;C&#x27;, &#x27;D&#x27;, &#x27;E&#x27;, &#x27;F&#x27;, &#x27;G&#x27;]
+
+Path: A -&gt; C -&gt; G
+Final OPEN: []
+Final CLOSED: [&#x27;A&#x27;, &#x27;B&#x27;, &#x27;C&#x27;, &#x27;D&#x27;, &#x27;E&#x27;, &#x27;F&#x27;, &#x27;G&#x27;]</pre>
+
+
+
+<h2>DFS</h2>
+<h3>Code</h3>
+<pre>graph = {
+    &#x27;A&#x27;: [&#x27;B&#x27;, &#x27;C&#x27;],
+    &#x27;B&#x27;: [&#x27;D&#x27;, &#x27;E&#x27;],
+    &#x27;C&#x27;: [&#x27;F&#x27;, &#x27;G&#x27;],
+    &#x27;D&#x27;: [],
+    &#x27;E&#x27;: [],
+    &#x27;F&#x27;: [],
+    &#x27;G&#x27;: []
+}
+
+start = &#x27;A&#x27;
+goal = &#x27;G&#x27;
+
+open_list = [start]
+closed_list = []
+parent = {start: None}
+
+while open_list:
+    node = open_list.pop()
+
+    if node in closed_list:
+        continue
+
+    closed_list.append(node)
+
+    print(&quot;OPEN:&quot;, open_list)
+    print(&quot;CLOSED:&quot;, closed_list)
+
+    if node == goal:
+        break
+
+    for neighbour in reversed(graph[node]):
+        if neighbour not in closed_list and neighbour not in open_list:
+            parent[neighbour] = node
+            open_list.append(neighbour)
+
+path = []
+
+if goal in closed_list:
+    node = goal
+
+    while node is not None:
+        path.append(node)
+        node = parent[node]
+
+    path.reverse()
+
+print(&quot;\nPath:&quot;, &quot; -&gt; &quot;.join(path))
+print(&quot;Final OPEN:&quot;, open_list)
+print(&quot;Final CLOSED:&quot;, closed_list)</pre>
+<h3>Output</h3>
+<pre>OPEN: []
+CLOSED: [&#x27;A&#x27;]
+OPEN: [&#x27;C&#x27;]
+CLOSED: [&#x27;A&#x27;, &#x27;B&#x27;]
+OPEN: [&#x27;C&#x27;, &#x27;E&#x27;]
+CLOSED: [&#x27;A&#x27;, &#x27;B&#x27;, &#x27;D&#x27;]
+OPEN: [&#x27;C&#x27;]
+CLOSED: [&#x27;A&#x27;, &#x27;B&#x27;, &#x27;D&#x27;, &#x27;E&#x27;]
+OPEN: []
+CLOSED: [&#x27;A&#x27;, &#x27;B&#x27;, &#x27;D&#x27;, &#x27;E&#x27;, &#x27;C&#x27;]
+OPEN: [&#x27;G&#x27;]
+CLOSED: [&#x27;A&#x27;, &#x27;B&#x27;, &#x27;D&#x27;, &#x27;E&#x27;, &#x27;C&#x27;, &#x27;F&#x27;]
+OPEN: []
+CLOSED: [&#x27;A&#x27;, &#x27;B&#x27;, &#x27;D&#x27;, &#x27;E&#x27;, &#x27;C&#x27;, &#x27;F&#x27;, &#x27;G&#x27;]
+
+Path: A -&gt; C -&gt; G
+Final OPEN: []
+Final CLOSED: [&#x27;A&#x27;, &#x27;B&#x27;, &#x27;D&#x27;, &#x27;E&#x27;, &#x27;C&#x27;, &#x27;F&#x27;, &#x27;G&#x27;]</pre>
+
+
+
+<h2>IDDFS</h2>
+<h3>Code</h3>
+<pre>graph = {
+    &#x27;A&#x27;: [&#x27;B&#x27;, &#x27;C&#x27;],
+    &#x27;B&#x27;: [&#x27;D&#x27;, &#x27;E&#x27;],
+    &#x27;C&#x27;: [&#x27;F&#x27;, &#x27;G&#x27;],
+    &#x27;D&#x27;: [],
+    &#x27;E&#x27;: [],
+    &#x27;F&#x27;: [],
+    &#x27;G&#x27;: []
+}
+
+start = &#x27;A&#x27;
+goal = &#x27;G&#x27;
+
+
+def depth_limited_search(start, goal, limit):
+
+    open_list = [(start, 0)]
+    closed_list = []
+    parent = {start: None}
+
+    while open_list:
+
+        node, depth = open_list.pop()
+
+        if node in closed_list:
+            continue
+
+        closed_list.append(node)
+
+        print(&quot;OPEN:&quot;, open_list)
+        print(&quot;CLOSED:&quot;, closed_list)
+
+        if node == goal:
+
+            path = []
+            current = node
+
+            while current is not None:
+                path.append(current)
+                current = parent[current]
+
+            path.reverse()
+
+            return path, open_list, closed_list
+
+        if depth &lt; limit:
+
+            for neighbour in reversed(graph[node]):
+
+                if neighbour not in closed_list:
+                    parent[neighbour] = node
+                    open_list.append((neighbour, depth + 1))
+
+    return None, open_list, closed_list
+
+
+depth = 0
+
+while True:
+
+    print(&quot;\n==============================&quot;)
+    print(&quot;DEPTH LIMIT:&quot;, depth)
+    print(&quot;==============================&quot;)
+
+    path, open_list, closed_list = depth_limited_search(
+        start,
+        goal,
+        depth
+    )
+
+    if path is not None:
+        print(&quot;\nGoal Found!&quot;)
+        print(&quot;Path:&quot;, &quot; -&gt; &quot;.join(path))
+        print(&quot;Final OPEN:&quot;, open_list)
+        print(&quot;Final CLOSED:&quot;, closed_list)
+        break
+
+    depth += 1</pre>
+<h3>Output</h3>
+<pre>
+==============================
+DEPTH LIMIT: 0
+==============================
+OPEN: []
+CLOSED: [&#x27;A&#x27;]
+
+==============================
+DEPTH LIMIT: 1
+==============================
+OPEN: []
+CLOSED: [&#x27;A&#x27;]
+OPEN: [(&#x27;C&#x27;, 1)]
+CLOSED: [&#x27;A&#x27;, &#x27;B&#x27;]
+OPEN: []
+CLOSED: [&#x27;A&#x27;, &#x27;B&#x27;, &#x27;C&#x27;]
+
+==============================
+DEPTH LIMIT: 2
+==============================
+OPEN: []
+CLOSED: [&#x27;A&#x27;]
+OPEN: [(&#x27;C&#x27;, 1)]
+CLOSED: [&#x27;A&#x27;, &#x27;B&#x27;]
+OPEN: [(&#x27;C&#x27;, 1), (&#x27;E&#x27;, 2)]
+CLOSED: [&#x27;A&#x27;, &#x27;B&#x27;, &#x27;D&#x27;]
+OPEN: [(&#x27;C&#x27;, 1)]
+CLOSED: [&#x27;A&#x27;, &#x27;B&#x27;, &#x27;D&#x27;, &#x27;E&#x27;]
+OPEN: []
+CLOSED: [&#x27;A&#x27;, &#x27;B&#x27;, &#x27;D&#x27;, &#x27;E&#x27;, &#x27;C&#x27;]
+OPEN: [(&#x27;G&#x27;, 2)]
+CLOSED: [&#x27;A&#x27;, &#x27;B&#x27;, &#x27;D&#x27;, &#x27;E&#x27;, &#x27;C&#x27;, &#x27;F&#x27;]
+OPEN: []
+CLOSED: [&#x27;A&#x27;, &#x27;B&#x27;, &#x27;D&#x27;, &#x27;E&#x27;, &#x27;C&#x27;, &#x27;F&#x27;, &#x27;G&#x27;]
+
+Goal Found!
+Path: A -&gt; C -&gt; G
+Final OPEN: []
+Final CLOSED: [&#x27;A&#x27;, &#x27;B&#x27;, &#x27;D&#x27;, &#x27;E&#x27;, &#x27;C&#x27;, &#x27;F&#x27;, &#x27;G&#x27;]</pre>
+
+
+</body>
+</html>
