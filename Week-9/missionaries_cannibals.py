@@ -1,4 +1,3 @@
-
 from collections import deque
 
 start = (3, 3, 0)

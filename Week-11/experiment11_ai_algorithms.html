@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Experiment 11 - AI Algorithms</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #ffffff;
+      color: #000000;
+      line-height: 1.6;
+      margin: 32px auto;
+      padding: 0 22px;
+      max-width: 1000px;
+    }
+    h1, h2, h3, p, pre, code { color: #000000; }
+    h1 { text-align: center; margin-bottom: 36px; }
+    h2 { border-bottom: 1px solid #000000; padding-bottom: 6px; margin-top: 42px; }
+    h3 { margin-top: 26px; }
+    pre {
+      background: #ffffff;
+      border: 1px solid #000000;
+      padding: 16px;
+      white-space: pre;
+      overflow-x: auto;
+      font-family: Consolas, "Courier New", monospace;
+      font-size: 13px;
+      line-height: 1.45;
+    }
+    .output { white-space: pre-wrap; }
+    .note { font-size: 0.92em; }
+    @media print {
+      body { margin: 12mm; max-width: none; }
+      pre { white-space: pre-wrap; overflow-wrap: anywhere; }
+    }
+  </style>
+</head>
+<body>
+  <h1>Week 11 Lab Programs</h1>
+
+  <section>
+    <h2>1. A* Algorithm for 8 Puzzle Problem</h2>
+
+    <h3>AIM</h3>
+    <p>To implement the A* Search algorithm for solving the 8-puzzle problem in Artificial Intelligence. The objective is to find the optimal sequence of moves required to transform an initial configuration of numbered tiles into the desired goal state using heuristic functions and minimum path cost efficiently.</p>
+
+    <h3>DESCRIPTION</h3>
+    <p>The 8-puzzle problem consists of a 3×3 grid containing eight numbered tiles and one blank space. A* Search uses the evaluation function f(n) = g(n) + h(n), where g(n) represents path cost and h(n) estimates distance to the goal. It explores promising states to find the optimal solution.</p>
+
+    <h3>CODE</h3>
+    <pre><code>import heapq
+
+class PuzzleState:
+    def __init__(self, board, g=0, parent=None):
+        self.board = board  # 1D tuple of length 9 representing the 3x3 board
+        self.g = g          # Cost from start to current node
+        self.parent = parent
+        self.h = self.calculate_manhattan_distance()
+        self.f = self.g + self.h
+
+    def calculate_manhattan_distance(self):
+        distance = 0
+        goal_positions = {
+            1: (0, 0), 2: (0, 1), 3: (0, 2),
+            4: (1, 0), 5: (1, 1), 6: (1, 2),
+            7: (2, 0), 8: (2, 1), 0: (2, 2)  # 0 represents the empty space
+        }
+        for i, val in enumerate(self.board):
+            if val != 0:
+                current_row, current_col = i // 3, i % 3
+                goal_row, goal_col = goal_positions[val]
+                distance += abs(current_row - goal_row) + abs(current_col - goal_col)
+        return distance
+
+    def get_neighbors(self):
+        neighbors = []
+        zero_idx = self.board.index(0)
+        row, col = zero_idx // 3, zero_idx % 3
+
+        moves = [(-1, 0), (1, 0), (0, -1), (0, 1)]
+
+        for dr, dc in moves:
+            new_row, new_col = row + dr, col + dc
+            if 0 &lt;= new_row &lt; 3 and 0 &lt;= new_col &lt; 3:
+                new_zero_idx = new_row * 3 + new_col
+                new_board = list(self.board)
+                new_board[zero_idx], new_board[new_zero_idx] = new_board[new_zero_idx], new_board[zero_idx]
+                neighbors.append(PuzzleState(tuple(new_board), self.g + 1, self))
+        return neighbors
+
+    def __lt__(self, other):
+        return self.f &lt; other.f
+
+    def print_board(self):
+        for i in range(0, 9, 3):
+            print(self.board[i:i+3])
+        print()
+
+def solve_8_puzzle(start_board):
+    goal = (1, 2, 3, 4, 5, 6, 7, 8, 0)
+    start_state = PuzzleState(start_board)
+
+    open_set = []
+    heapq.heappush(open_set, start_state)
+    closed_set = set()
+
+    while open_set:
+        current_state = heapq.heappop(open_set)
+
+        if current_state.board == goal:
+            path = []
+            curr = current_state
+            while curr:
+                path.append(curr)
+                curr = curr.parent
+            return path[::-1]
+
+        closed_set.add(current_state.board)
+
+        for neighbor in current_state.get_neighbors():
+            if neighbor.board in closed_set:
+                continue
+
+            heapq.heappush(open_set, neighbor)
+
+    return None
+
+initial_state = (1, 3, 0, 4, 2, 6, 7, 5, 8)
+
+print("Searching for a solution...")
+solution_path = solve_8_puzzle(initial_state)
+
+if solution_path:
+    print(f"Solution found in {len(solution_path) - 1} moves!\\n")
+    for step, state in enumerate(solution_path):
+        print(f"Step {step}:")
+        state.print_board()
+else:
+    print("No solution exists.")</code></pre>
+
+    <h3>OUTPUT</h3>
+    <pre class="output">Searching for a solution...
+Solution found in 4 moves!
+
+Step 0:
+(1, 3, 0)
+(4, 2, 6)
+(7, 5, 8)
+
+Step 1:
+(1, 0, 3)
+(4, 2, 6)
+(7, 5, 8)
+
+Step 2:
+(1, 2, 3)
+(4, 0, 6)
+(7, 5, 8)
+
+Step 3:
+(1, 2, 3)
+(4, 5, 6)
+(7, 0, 8)
+
+Step 4:
+(1, 2, 3)
+(4, 5, 6)
+(7, 8, 0)</pre>
+  </section>
+
+  <section>
+    <h2>2. Tic Tac Toe Using Minimax Algorithm</h2>
+
+    <h3>AIM</h3>
+    <p>To implement the Tic-Tac-Toe game using the Minimax algorithm in Artificial Intelligence. The objective is to develop an intelligent computer player that makes optimal decisions by evaluating possible moves and selecting the best move to maximize its chances of winning while minimizing the opponent's chances of winning or achieving a draw.</p>
+
+    <h3>DESCRIPTION</h3>
+    <p>Tic-Tac-Toe is a two-player game played on a 3×3 grid. The Minimax algorithm explores all possible moves and evaluates game states to determine the optimal move. It maximizes the computer's score and minimizes the opponent's score. The algorithm helps the computer play intelligently, ensuring the best possible outcome.</p>
+
+    <h3>CODE</h3>
+    <pre><code>import math
+import copy
+
+def print_board(board):
+    for i in range(3):
+        print(f" {board[i*3]} | {board[i*3+1]} | {board[i*3+2]} ")
+        if i &lt; 2:
+            print("---|---|---")
+    print()
+
+def check_winner(board):
+    win_states = [
+        [0, 1, 2], [3, 4, 5], [6, 7, 8],  # rows
+        [0, 3, 6], [1, 4, 7], [2, 5, 8],  # columns
+        [0, 4, 8], [2, 4, 6]             # diagonals
+    ]
+    for win in win_states:
+        if board[win[0]] == board[win[1]] == board[win[2]] and board[win[0]] != ' ':
+            return board[win[0]]
+    if ' ' not in board:
+        return 'Tie'
+    return None
+
+def minimax(board, depth, is_maximizing, ai_player, opponent):
+    winner = check_winner(board)
+    if winner == ai_player:
+        return 10 - depth
+    if winner == opponent:
+        return depth - 10
+    if winner == 'Tie':
+        return 0
+
+    if is_maximizing:
+        best_score = -math.inf
+        for i in range(9):
+            if board[i] == ' ':
+                board[i] = ai_player
+                score = minimax(board, depth + 1, False, ai_player, opponent)
+                board[i] = ' '
+                best_score = max(score, best_score)
+        return best_score
+    else:
+        best_score = math.inf
+        for i in range(9):
+            if board[i] == ' ':
+                board[i] = opponent
+                score = minimax(board, depth + 1, True, ai_player, opponent)
+                board[i] = ' '
+                best_score = min(score, best_score)
+        return best_score
+
+def get_next_best_state(current_state, player):
+    if len(current_state) != 9:
+        raise ValueError("The board state must contain exactly 9 elements.")
+
+    if check_winner(current_state) is not None:
+        print("Game is already over!")
+        return current_state
+
+    opponent = 'O' if player == 'X' else 'X'
+    best_score = -math.inf
+    best_move = -1
+
+    for i in range(9):
+        if current_state[i] == ' ':
+            current_state[i] = player
+            score = minimax(current_state, 0, False, player, opponent)
+            current_state[i] = ' '
+            if score &gt; best_score:
+                best_score = score
+                best_move = i
+
+    if best_move != -1:
+        next_state = copy.deepcopy(current_state)
+        next_state[best_move] = player
+        return next_state
+
+    return current_state
+
+start_state_1 = [
+    'X', 'X', ' ',
+    ' ', 'O', ' ',
+    ' ', ' ', ' '
+]
+
+print("Start State:")
+print_board(start_state_1)
+
+next_state_1 = get_next_best_state(start_state_1, player='O')
+print("Next Best State for Player 'O':")
+print_board(next_state_1)</code></pre>
+
+    <h3>OUTPUT</h3>
+    <pre class="output">Start State:
+ X | X |  
+---|---|---
+   | O |  
+---|---|---
+   |   |  
+
+Next Best State for Player 'O':
+ X | X | O
+---|---|---
+   | O |  
+---|---|---
+   |   |  </pre>
+  </section>
+</body>
+</html>

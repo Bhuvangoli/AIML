@@ -1,4 +1,3 @@
-
 from math import gcd
 
 jug1 = int(input("Enter capacity of Jug 1: "))
